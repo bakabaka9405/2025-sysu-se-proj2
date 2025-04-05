@@ -232,11 +232,22 @@ onMounted(() => {
           </div>
 
           <v-list v-else lines="two">
-            <v-list-item v-for="todo in filteredTodos" :key="todo.id" :title="todo.title" :subtitle="todo.description"
-              :class="{ 'text-decoration-line-through': todo.completed }">
+            <v-list-item v-for="todo in filteredTodos" :key="todo.id" 
+              :title-class="{ 'text-decoration-line-through': todo.completed }" 
+              :subtitle-class="{ 'text-decoration-line-through': todo.completed }">
               <template v-slot:prepend>
                 <v-checkbox v-model="todo.completed" @change="() => toggleTodoStatus(todo)" hide-details
                   color="success"></v-checkbox>
+              </template>
+
+              <!-- 添加自定义标题插槽以应用删除线效果 -->
+              <template v-slot:title>
+                <span :class="{ 'text-decoration-line-through': todo.completed }">{{ todo.title }}</span>
+              </template>
+
+              <!-- 添加自定义描述插槽以应用删除线效果 -->
+              <template v-slot:subtitle>
+                <span :class="{ 'text-decoration-line-through': todo.completed }">{{ todo.description }}</span>
               </template>
 
               <template v-slot:append>
