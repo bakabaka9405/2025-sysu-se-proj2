@@ -3,8 +3,6 @@ use rusqlite::{Connection, Result, params};
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 use std::fs;
-use std::path::Path;
-use tauri::AppHandle;
 use uuid::Uuid;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
@@ -51,7 +49,7 @@ enum DatabaseError {
 }
 
 // 初始化数据库
-fn initialize_database(app_handle: &AppHandle) -> Result<Connection, DatabaseError> {
+fn initialize_database() -> Result<Connection, DatabaseError> {
     // 获取应用数据目录 - 使用标准库方法
     let app_data_dir = match dirs::data_dir() {
         Some(dir) => dir.join("todo-list-app"),
@@ -84,11 +82,11 @@ fn initialize_database(app_handle: &AppHandle) -> Result<Connection, DatabaseErr
 }
 
 // 确保数据库连接已初始化
-fn get_db(app_handle: &AppHandle) -> Result<&Connection, DatabaseError> {
+fn get_db() -> Result<&'static Connection, DatabaseError> {
     let mut conn_guard = DB_CONNECTION.lock().unwrap();
     
     if conn_guard.is_none() {
-        *conn_guard = Some(initialize_database(app_handle)?);
+        *conn_guard = Some(initialize_database()?);
     }
     
     // 这里使用一个不安全块来绕过借用检查
@@ -101,8 +99,8 @@ fn get_db(app_handle: &AppHandle) -> Result<&Connection, DatabaseError> {
 
 // Tauri命令：获取所有Todo项
 #[tauri::command]
-fn get_all_todos(app_handle: AppHandle) -> Result<Vec<Todo>, String> {
-    let conn = match get_db(&app_handle) {
+fn get_all_todos() -> Result<Vec<Todo>, String> {
+    let conn = match get_db() {
         Ok(conn) => conn,
         Err(e) => return Err(format!("数据库错误: {}", e)),
     };
@@ -131,8 +129,8 @@ fn get_all_todos(app_handle: AppHandle) -> Result<Vec<Todo>, String> {
 
 // Tauri命令：创建Todo项
 #[tauri::command]
-fn create_todo(app_handle: AppHandle, todo: CreateTodoRequest) -> Result<Todo, String> {
-    let conn = match get_db(&app_handle) {
+fn create_todo(todo: CreateTodoRequest) -> Result<Todo, String> {
+    let conn = match get_db() {
         Ok(conn) => conn,
         Err(e) => return Err(format!("数据库错误: {}", e)),
     };
@@ -165,8 +163,8 @@ fn create_todo(app_handle: AppHandle, todo: CreateTodoRequest) -> Result<Todo, S
 
 // Tauri命令：更新Todo项
 #[tauri::command]
-fn update_todo(app_handle: AppHandle, id: String, updates: UpdateTodoRequest) -> Result<Todo, String> {
-    let conn = match get_db(&app_handle) {
+fn update_todo(id: String, updates: UpdateTodoRequest) -> Result<Todo, String> {
+    let conn = match get_db() {
         Ok(conn) => conn,
         Err(e) => return Err(format!("数据库错误: {}", e)),
     };
@@ -232,8 +230,8 @@ fn update_todo(app_handle: AppHandle, id: String, updates: UpdateTodoRequest) ->
 
 // Tauri命令：删除Todo项
 #[tauri::command]
-fn delete_todo(app_handle: AppHandle, id: String) -> Result<(), String> {
-    let conn = match get_db(&app_handle) {
+fn delete_todo(id: String) -> Result<(), String> {
+    let conn = match get_db() {
         Ok(conn) => conn,
         Err(e) => return Err(format!("数据库错误: {}", e)),
     };
@@ -261,11 +259,10 @@ pub fn run() {
             update_todo, 
             delete_todo
         ])
-        .setup(|app| {
+        .setup(|_| {
             // 应用启动时初始化数据库连接
-            let app_handle = app.handle();
             let mut conn_guard = DB_CONNECTION.lock().unwrap();
-            *conn_guard = Some(initialize_database(&app_handle).expect("Failed to initialize database"));
+            *conn_guard = Some(initialize_database().expect("Failed to initialize database"));
             Ok(())
         })
         .run(tauri::generate_context!())
