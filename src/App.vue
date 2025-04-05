@@ -40,6 +40,12 @@ const deleteDialog = ref(false);
 const todoToDelete = ref<Todo | null>(null);
 const searchText = ref("");
 
+// Snackbar配置
+const snackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
+const snackbarTimeout = ref(3000);
+
 // 搜索过滤后的Todo列表
 const filteredTodos = computed(() => {
   if (!searchText.value) return todos.value;
@@ -51,6 +57,13 @@ const filteredTodos = computed(() => {
   );
 });
 
+// 显示消息通知
+function showMessage(text: string, isError = false) {
+  snackbarText.value = text;
+  snackbarColor.value = isError ? "error" : "success";
+  snackbar.value = true;
+}
+
 // 获取所有待办事项
 async function loadTodos() {
   loading.value = true;
@@ -59,7 +72,7 @@ async function loadTodos() {
   try {
     todos.value = await invoke("get_all_todos");
   } catch (error) {
-    errorMessage.value = `加载待办事项失败: ${error}`;
+    showMessage(`加载待办事项失败: ${error}`, true);
   } finally {
     loading.value = false;
   }
@@ -80,13 +93,13 @@ async function addTodo() {
 
   try {
     await invoke("create_todo", { todo: newTodo });
-    successMessage.value = "添加成功!";
+    showMessage("添加成功!");
     newTodo.title = "";
     newTodo.description = "";
     addDialog.value = false;
     await loadTodos();
   } catch (error) {
-    errorMessage.value = `添加待办事项失败: ${error}`;
+    showMessage(`添加待办事项失败: ${error}`, true);
   } finally {
     loading.value = false;
   }
@@ -123,11 +136,11 @@ async function updateTodo() {
         completed: editForm.completed
       }
     });
-    successMessage.value = "更新成功!";
+    showMessage("更新成功!");
     editDialog.value = false;
     await loadTodos();
   } catch (error) {
-    errorMessage.value = `更新待办事项失败: ${error}`;
+    showMessage(`更新待办事项失败: ${error}`, true);
   } finally {
     loading.value = false;
   }
@@ -157,7 +170,7 @@ async function toggleTodoStatus(todo: Todo) {
     if (todoIndex !== -1) {
       todos.value[todoIndex].completed = !todos.value[todoIndex].completed;
     }
-    errorMessage.value = `更新状态失败: ${error}`;
+    showMessage(`更新状态失败: ${error}`, true);
   }
 }
 
@@ -175,12 +188,12 @@ async function deleteTodo() {
 
   try {
     await invoke("delete_todo", { id: todoToDelete.value.id });
-    successMessage.value = "删除成功!";
+    showMessage("删除成功!");
     deleteDialog.value = false;
     todoToDelete.value = null;
     await loadTodos();
   } catch (error) {
-    errorMessage.value = `删除待办事项失败: ${error}`;
+    showMessage(`删除待办事项失败: ${error}`, true);
   } finally {
     loading.value = false;
   }
@@ -190,6 +203,7 @@ async function deleteTodo() {
 function clearMessages() {
   errorMessage.value = "";
   successMessage.value = "";
+  snackbar.value = false;
 }
 
 // 页面加载时获取所有待办事项
@@ -366,6 +380,14 @@ onMounted(() => {
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Snackbar通知 -->
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top right>
+      {{ snackbarText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">关闭</v-btn>
+      </template>
+    </v-snackbar>
   </v-app>
 </template>
 
