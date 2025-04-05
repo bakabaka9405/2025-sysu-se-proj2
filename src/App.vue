@@ -135,20 +135,29 @@ async function updateTodo() {
 
 // 切换待办事项完成状态
 async function toggleTodoStatus(todo: Todo) {
-  loading.value = true;
-
+  // 不再设置全局 loading 状态
   try {
-    await invoke("update_todo", {
-      id: todo.id,
-      updates: {
-        completed: todo.completed  // 直接使用当前状态，不再取反
-      }
-    });
-    await loadTodos();
+    // 在本地更新状态
+    const todoIndex = todos.value.findIndex(t => t.id === todo.id);
+    if (todoIndex !== -1) {
+      // 后台调用 API 更新状态
+      await invoke("update_todo", {
+        id: todo.id,
+        updates: {
+          completed: todo.completed
+        }
+      });
+      
+      // 不再重新加载所有数据
+      // 如果 API 调用成功，本地状态已经更新，无需其他操作
+    }
   } catch (error) {
+    // 发生错误时恢复原始状态
+    const todoIndex = todos.value.findIndex(t => t.id === todo.id);
+    if (todoIndex !== -1) {
+      todos.value[todoIndex].completed = !todos.value[todoIndex].completed;
+    }
     errorMessage.value = `更新状态失败: ${error}`;
-  } finally {
-    loading.value = false;
   }
 }
 
