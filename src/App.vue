@@ -141,7 +141,7 @@ async function toggleTodoStatus(todo: Todo) {
     await invoke("update_todo", {
       id: todo.id,
       updates: {
-        completed: !todo.completed
+        completed: todo.completed  // 直接使用当前状态，不再取反
       }
     });
     await loadTodos();
