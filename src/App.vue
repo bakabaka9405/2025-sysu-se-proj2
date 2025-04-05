@@ -161,6 +161,9 @@ async function toggleTodoStatus(todo: Todo) {
         }
       });
       
+      // 添加成功提示
+      showMessage(`已${todo.completed ? '完成' : '取消完成'}任务: ${todo.title}`);
+      
       // 不再重新加载所有数据
       // 如果 API 调用成功，本地状态已经更新，无需其他操作
     }
