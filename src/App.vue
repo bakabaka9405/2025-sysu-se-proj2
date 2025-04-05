@@ -32,6 +32,7 @@ const todos = ref<Todo[]>([]);
 // 显示控制
 const loading = ref(false);
 const errorMessage = ref("");
+const titleError = ref(""); // 新增：标题错误提示
 const successMessage = ref("");
 const addDialog = ref(false);
 const editDialog = ref(false);
@@ -66,13 +67,16 @@ async function loadTodos() {
 
 // 添加新待办事项
 async function addTodo() {
+  // 重置错误信息
+  titleError.value = "";
+  errorMessage.value = "";
+  
   if (!newTodo.title) {
-    errorMessage.value = "标题不能为空";
+    titleError.value = "标题不能为空";
     return;
   }
 
   loading.value = true;
-  errorMessage.value = "";
 
   try {
     await invoke("create_todo", { todo: newTodo });
@@ -99,13 +103,16 @@ function openEditDialog(todo: Todo) {
 
 // 更新待办事项
 async function updateTodo() {
+  // 重置错误信息
+  titleError.value = "";
+  errorMessage.value = "";
+  
   if (!editForm.title) {
-    errorMessage.value = "标题不能为空";
+    titleError.value = "标题不能为空";
     return;
   }
 
   loading.value = true;
-  errorMessage.value = "";
 
   try {
     await invoke("update_todo", {
@@ -277,7 +284,13 @@ onMounted(() => {
         <v-card-title>添加新待办事项</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="addTodo">
-            <v-text-field v-model="newTodo.title" label="标题*" required autofocus></v-text-field>
+            <v-text-field 
+              v-model="newTodo.title" 
+              label="标题*" 
+              required 
+              autofocus
+              :error-messages="titleError"
+            ></v-text-field>
 
             <v-textarea v-model="newTodo.description" label="描述" rows="3"></v-textarea>
           </v-form>
@@ -301,7 +314,12 @@ onMounted(() => {
         <v-card-title>编辑待办事项</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="updateTodo">
-            <v-text-field v-model="editForm.title" label="标题*" required></v-text-field>
+            <v-text-field 
+              v-model="editForm.title" 
+              label="标题*" 
+              required
+              :error-messages="titleError"
+            ></v-text-field>
 
             <v-textarea v-model="editForm.description" label="描述" rows="3"></v-textarea>
 
