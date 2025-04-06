@@ -242,18 +242,11 @@ fn delete_todo(id: String) -> Result<(), String> {
     Ok(())
 }
 
-// 原有的问候函数
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            greet, 
             get_all_todos, 
             create_todo, 
             update_todo, 
