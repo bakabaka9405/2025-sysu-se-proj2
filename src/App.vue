@@ -83,7 +83,7 @@ async function addTodo() {
   // 重置错误信息
   titleError.value = "";
   errorMessage.value = "";
-  
+
   if (!newTodo.title) {
     titleError.value = "标题不能为空";
     return;
@@ -119,7 +119,7 @@ async function updateTodo() {
   // 重置错误信息
   titleError.value = "";
   errorMessage.value = "";
-  
+
   if (!editForm.title) {
     titleError.value = "标题不能为空";
     return;
@@ -160,10 +160,10 @@ async function toggleTodoStatus(todo: Todo) {
           completed: todo.completed
         }
       });
-      
+
       // 添加成功提示
       showMessage(`已${todo.completed ? '完成' : '取消完成'}任务: ${todo.title}`);
-      
+
       // 不再重新加载所有数据
       // 如果 API 调用成功，本地状态已经更新，无需其他操作
     }
@@ -212,6 +212,17 @@ function clearMessages() {
 // 页面加载时获取所有待办事项
 onMounted(() => {
   loadTodos();
+  window.addEventListener('contextmenu', (e) => e.preventDefault(), false);
+  document.addEventListener('keydown', function (event) {
+    // Prevent F5 or Ctrl+R (Windows/Linux) and Command+R (Mac) from refreshing the page
+    if (
+      event.key === 'F5' ||
+      (event.ctrlKey && event.key === 'r') ||
+      (event.metaKey && event.key === 'r')
+    ) {
+      event.preventDefault();
+    }
+  });
 });
 </script>
 
@@ -265,8 +276,8 @@ onMounted(() => {
           </div>
 
           <v-list v-else lines="two">
-            <v-list-item v-for="todo in filteredTodos" :key="todo.id" 
-              :title-class="{ 'text-decoration-line-through': todo.completed }" 
+            <v-list-item v-for="todo in filteredTodos" :key="todo.id"
+              :title-class="{ 'text-decoration-line-through': todo.completed }"
               :subtitle-class="{ 'text-decoration-line-through': todo.completed }">
               <template v-slot:prepend>
                 <v-checkbox v-model="todo.completed" @change="() => toggleTodoStatus(todo)" hide-details
@@ -310,13 +321,8 @@ onMounted(() => {
         <v-card-title>添加新待办事项</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="addTodo">
-            <v-text-field 
-              v-model="newTodo.title" 
-              label="标题*" 
-              required 
-              autofocus
-              :error-messages="titleError"
-            ></v-text-field>
+            <v-text-field v-model="newTodo.title" label="标题*" required autofocus
+              :error-messages="titleError"></v-text-field>
 
             <v-textarea v-model="newTodo.description" label="描述" rows="3"></v-textarea>
           </v-form>
@@ -340,12 +346,7 @@ onMounted(() => {
         <v-card-title>编辑待办事项</v-card-title>
         <v-card-text>
           <v-form @submit.prevent="updateTodo">
-            <v-text-field 
-              v-model="editForm.title" 
-              label="标题*" 
-              required
-              :error-messages="titleError"
-            ></v-text-field>
+            <v-text-field v-model="editForm.title" label="标题*" required :error-messages="titleError"></v-text-field>
 
             <v-textarea v-model="editForm.description" label="描述" rows="3"></v-textarea>
 
@@ -395,5 +396,30 @@ onMounted(() => {
 .completed {
   text-decoration: line-through;
   opacity: 0.7;
+}
+</style>
+
+<style>
+/* 移除滚动栏 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+
+  /* 禁止文本选中 */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 禁止浏览器右键菜单 */
+html {
+  -webkit-touch-callout: none;
 }
 </style>
