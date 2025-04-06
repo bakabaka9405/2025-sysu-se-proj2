@@ -44,7 +44,7 @@ const searchText = ref("");
 const snackbar = ref(false);
 const snackbarText = ref("");
 const snackbarColor = ref("success");
-const snackbarTimeout = ref(3000);
+const snackbarTimeout = ref(1500);
 
 // 搜索过滤后的Todo列表
 const filteredTodos = computed(() => {
@@ -387,9 +387,6 @@ onMounted(() => {
     <!-- Snackbar通知 -->
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top right>
       {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">关闭</v-btn>
-      </template>
     </v-snackbar>
   </v-app>
 </template>
