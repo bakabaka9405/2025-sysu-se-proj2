@@ -31,7 +31,7 @@
 1. 克隆项目代码：
 
    ```bash
-   git clone <仓库地址>
+   git clone https://github.com/bakabaka9405/2025-sysu-se-proj2
    cd 2025-sysu-se-proj2
    ```
 
